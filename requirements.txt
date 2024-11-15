@@ -1,0 +1,7 @@
+# requirements.txt
+
+psycopg2-binary~=2.9.10
+python-dotenv~=1.0.1
+openai~=1.54.4
+matplotlib~=3.9.2
+fpdf~=1.7.2
