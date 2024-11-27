@@ -32,16 +32,10 @@ class ReportGenerator:
 
             if 'raw_data' in analysis_data:
                 logging.debug("Adding charts and metrics")
-                self._add_charts_page(analysis_data['raw_data'], temp_dir)
                 self._add_metrics_tables(analysis_data['raw_data'])
             else:
                 logging.warning("No raw_data found in analysis_data")
 
-            if 'analysis' in analysis_data:
-                logging.debug("Adding detailed analysis")
-                self._add_detailed_analysis(analysis_data['analysis'])
-            else:
-                logging.warning("No analysis found in analysis_data")
 
             filename = f"reports/{analysis_data['customer_name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
             self.pdf.output(filename)
@@ -82,7 +76,7 @@ class ReportGenerator:
             self.pdf.ln(5)
             self.pdf.set_text_color(0, 0, 0)
             self.pdf.set_font('Arial', 'B', 20)
-            self.pdf.cell(0, 10, customer_name, ln=True, align='C')
+            self.pdf.cell(0, 10, customer_name.title(), ln=True, align='C')
 
             # Date
             self.pdf.ln(5)
@@ -91,81 +85,54 @@ class ReportGenerator:
             self.pdf.cell(0, 5, f'Report covers last {self.months} month{"s" if self.months != 1 else ""}', ln=True,
                           align='C')
 
-            # Table of Contents
-            self.pdf.ln(10)
-            self.pdf.set_font('Arial', 'B', 16)
-            self.pdf.cell(0, 10, 'Table of Contents', ln=True)
 
-            self.pdf.set_font('Arial', '', 12)
-            self.pdf.ln(10)
-            self.pdf.cell(0, 10, '1. Executive Overview', ln=True)
-            self.pdf.cell(0, 10, '2. Usage Analytics', ln=True)
-            self.pdf.cell(0, 10, '3. Metrics Tables', ln=True)
-            self.pdf.cell(0, 10, '4. Detailed Analysis', ln=True)
-
-            # Footer
-            self.pdf.set_y(-30)
-            self.pdf.set_font('Arial', 'I', 8)
-            self.pdf.cell(0, 10, 'Confidential - For Internal Use Only', align='C')
         except Exception as e:
             logging.error(f"Error adding cover page: {e}")
 
 
     def _add_overview_page(self, analysis_data):
         try:
-            self.pdf.add_page()
-            self.pdf.set_font('Arial', 'B', 16)
-            self.pdf.cell(0, 10, 'Executive Overview', ln=True)
+            self.pdf.ln(10)
+            self.pdf.set_font('Arial', 'BU', 12)
+            self.pdf.cell(0, 12, 'Restore Visibility Overview', ln=True)
 
             if 'analysis' in analysis_data:
                 analysis_text = analysis_data['analysis']
-                summary = analysis_text.split('2.')[0] if '2.' in analysis_text else analysis_text
-                self.pdf.set_font('Arial', '', 12)
-                self.pdf.multi_cell(0, 8, summary)
+                # Extract the summary as before
+                summary = analysis_text.split('1. Document Management & Compliance')[
+                    0] if '1.' in analysis_text else analysis_text
+
+
+
+                # Split the text into lines and remove the first line if it matches "0. Overview"
+                summary_lines = summary.splitlines()
+                if summary_lines and summary_lines[0].strip().startswith("0."):
+                    summary_lines.pop(0)  # Remove the first line
+
+
+                # Join the remaining lines back together
+                cleaned_summary = "\n".join(summary_lines).strip()
+
+                self.pdf.set_font('Arial', '', 9)
+                self.pdf.multi_cell(0, 5, cleaned_summary)
+                if 'analysis' in analysis_data:
+                    logging.debug("Adding detailed analysis")
+                    self._add_detailed_analysis(analysis_data['analysis'])
+                else:
+                    logging.warning("No analysis found in analysis_data")
             else:
                 logging.warning("No analysis text found for overview page")
-                self.pdf.set_font('Arial', '', 12)
-                self.pdf.multi_cell(0, 8, "Analysis data not available")
+                self.pdf.set_font('Arial', '', 9)
+                self.pdf.multi_cell(0, 5, "Analysis data not available")
+
         except Exception as e:
             logging.error(f"Error adding overview page: {e}")
 
-    def _add_charts_page(self, raw_data, temp_dir):
-        try:
-            logging.debug("Starting charts page generation")
-            self.pdf.add_page()
-            self.pdf.set_font('Arial', 'B', 16)
-            self.pdf.cell(0, 10, 'Usage Analytics', ln=True)
-
-            user_chart_path = self._create_user_engagement_chart(raw_data, temp_dir)
-            if user_chart_path and os.path.exists(user_chart_path):
-                logging.debug("Adding user engagement chart")
-                self.pdf.image(user_chart_path, x=10, y=25, w=190)
-            else:
-                logging.warning("No user engagement chart generated")
-                self.pdf.ln(20)
-                self.pdf.set_font('Arial', '', 12)
-                self.pdf.cell(0, 10, "User engagement data not available", ln=True)
-
-            contract_chart_path = self._create_contract_metrics_chart(raw_data, temp_dir)
-            if contract_chart_path and os.path.exists(contract_chart_path):
-                logging.debug("Adding contract metrics chart")
-                self.pdf.image(contract_chart_path, x=10, y=150, w=190)
-            else:
-                logging.warning("No contract metrics chart generated")
-                self.pdf.ln(20)
-                self.pdf.set_font('Arial', '', 12)
-                self.pdf.cell(0, 10, "Contract metrics data not available", ln=True)
-
-        except Exception as e:
-            logging.error(f"Error adding charts page: {e}")
-            self.pdf.ln(20)
-            self.pdf.set_font('Arial', '', 12)
-            self.pdf.cell(0, 10, "Error generating analytics charts", ln=True)
 
     def _add_metrics_tables(self, raw_data):
         try:
             self.pdf.add_page()
-            self.pdf.set_font('Arial', 'B', 14)
+            self.pdf.set_font('Arial', 'B', 9)
             self.pdf.set_fill_color(240, 240, 240)
 
             metrics_groups = {
@@ -187,7 +154,7 @@ class ReportGenerator:
             }
 
             for group, metrics in metrics_groups.items():
-                self.pdf.set_font('Arial', 'B', 12)
+                self.pdf.set_font('Arial', 'B', 9)
                 self.pdf.cell(0, 10, group, ln=True, fill=True)
 
                 self.pdf.set_font('Arial', '', 10)
@@ -204,10 +171,10 @@ class ReportGenerator:
     def _add_detailed_analysis(self, analysis):
         try:
             self.pdf.add_page()
-            self.pdf.set_font('Arial', 'B', 14)
+            self.pdf.set_font('Arial', 'B', 9)
             self.pdf.cell(0, 10, 'Detailed Analysis', ln=True)
 
-            self.pdf.set_font('Arial', '', 12)
+            self.pdf.set_font('Arial', '', 9)
             for line in analysis.split('\n'):
                 if line.strip():
                     if any(str(i) in line[:4] for i in range(1, 8)):
@@ -218,7 +185,7 @@ class ReportGenerator:
                     else:
                         if line.strip().startswith('-'):
                             self.pdf.set_x(20)
-                        self.pdf.multi_cell(0, 8, line)
+                        self.pdf.multi_cell(0, 6, line)
         except Exception as e:
             logging.error(f"Error adding detailed analysis: {e}")
 

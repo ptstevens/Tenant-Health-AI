@@ -24,7 +24,11 @@ class CustomerAnalyzer:
         self.model = os.getenv('OPENAI_MODEL', 'gpt-4')
         self.temperature = temperature if temperature is not None else float(os.getenv('TEMPERATURE', 0.7))
         self.system_prompt = """You are a Gatekeeper contract management software expert. Analyze customer usage data with precise interpretation of key features:
-
+        0. Overview
+        - Focus on key metrics and risks and provide a short paragraphph summary of the analysis.
+        - Include positive and negative trends, areas of improvement, and actionable recommendations in a positive tone.
+        - ALWAYS start the Overview paragraph with the customer name.
+        
         1. Document Management & Compliance
         - Master Record coverage analysis
           * These are finalized, executed agreements serving as authoritative versions
@@ -72,7 +76,8 @@ class CustomerAnalyzer:
           * User adoption challenges
           * E-signature strategy optimization
 
-        Focus on actual metrics and their business impact. When analyzing e-signatures, remember that "DocuSign Disabled" is not necessarily a negative if the customer is actively using Gatekeeper's e-signature solution. Provide specific, data-driven insights."""
+        Focus on actual metrics and their business impact -*** YOU NEED TO BE CONSISTENT IN YOUR RESPONSES IF YOU ARE SENT THE SAME DATASET I EXPECT THE SAME RESPONSE.*** When analyzing e-signatures, remember that "DocuSign Disabled" is not a negative if the customer is actively using Gatekeeper's e-signature solution. Provide specific, data-driven insights. ****
+        YOU MUST ALWAYS REPLY IN A FRIENDLY POSITIVE WAY ****"""
 
     def analyze_customer(self, customer_data):
         try:
